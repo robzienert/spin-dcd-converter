@@ -120,6 +120,9 @@ def render(pipeline_template):
 # * Rename the pipeline stage IDs, notification names and trigger names to be 
 #   more meaningful. Enumerated stage IDs is ultimately a detriment for 
 #   long-term maintainability.
+# * Best intentions are made to order most things, but the list of stages 
+#   themselves are not ordered: Rearrange the stages so that they're roughly 
+#   chronological.
 {template}
 '''.format(template=yaml.safe_dump(pipeline_template, default_flow_style=False))
 
