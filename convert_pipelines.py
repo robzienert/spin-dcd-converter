@@ -40,7 +40,7 @@ def convert(pipeline_config):
         ('parallel', pipeline_config['parallel']),
         ('limitConcurrent', pipeline_config['limitConcurrent'])
       ])),
-      ('trigger', map(lambda t: t.update(name=t['id']), pipeline_config['triggers'])),
+      ('triggers', _convert_triggers(pipeline_config['triggers'])),
       ('parameters', pipeline_config['parameterConfig']),
       ('notifications', _convert_notifications(pipeline_config['notifications']))
     ])),
@@ -53,15 +53,18 @@ def convert(pipeline_config):
 def _convert_stages(stages):
   ret = []
   for s in stages:
+    depends_on = []
+    if 'requisiteStageRefIds' in s and len(s['requisiteStageRefIds']) > 0:
+      depends_on = [_get_ref_stage_id(stages, ref_id) for ref_id in s['requisiteStageRefIds']]
+
     stage = UnsortableOrderedDict([
       ('id', _get_stage_id(s['type'], s['refId'])),
       ('type', s['type']),
+      ('dependsOn', depends_on),
       ('name', s['name']),
       ('config', _scrub_stage_config(s))
     ])
 
-    if 'requisiteStageRefIds' in stage and len(stage['requisiteStageRefIds']) > 0:
-      stage['dependsOn'] = [_get_ref_stage_id(s) for s in stage['requisiteStageRefIds']]
     ret.append(stage)
 
   return ret
@@ -79,9 +82,18 @@ def _get_stage_id(stage_type, stage_ref_id):
 def _scrub_stage_config(stage):
   s = copy.deepcopy(stage)
   del s['type']
+  del s['name']
   del s['refId']
   del s['requisiteStageRefIds']
   return s
+
+
+def _convert_triggers(triggers):
+  ret = []
+  for t in triggers:
+    t['name'] = t['id']
+    ret.append(t)
+  return ret
 
 
 def _convert_notifications(notifications):
