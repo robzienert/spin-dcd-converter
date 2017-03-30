@@ -40,9 +40,9 @@ def convert(pipeline_config):
         ('parallel', pipeline_config['parallel']),
         ('limitConcurrent', pipeline_config['limitConcurrent'])
       ])),
-      ('triggers', _convert_triggers(pipeline_config['triggers'])),
-      ('parameters', pipeline_config['parameterConfig']),
-      ('notifications', _convert_notifications(pipeline_config['notifications']))
+      ('triggers', _convert_triggers(pipeline_config['triggers']) if 'triggers' in pipeline_config else []),
+      ('parameters', pipeline_config['parameterConfig'] if 'parameterConfig' in pipeline_config else []),
+      ('notifications', _convert_notifications(pipeline_config['notifications']) if 'notifications' in pipeline_config else [])
     ])),
     ('variables', []),
     ('stages', _convert_stages(pipeline_config['stages']))
@@ -90,8 +90,10 @@ def _scrub_stage_config(stage):
 
 def _convert_triggers(triggers):
   ret = []
+  i = 0
   for t in triggers:
-    t['name'] = t['id']
+    i += 1
+    t['name'] = 'unnamed' + str(i)
     ret.append(t)
   return ret
 
@@ -100,6 +102,7 @@ def _convert_notifications(notifications):
   i = 0
   ret = []
   for n in notifications:
+    i += 1
     n['name'] = '{}{}'.format(n['type'], i)
     ret.append(n)
   return ret
