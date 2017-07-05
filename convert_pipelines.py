@@ -121,6 +121,8 @@ def render(pipeline_template):
 #
 # Some recommendations to massage the initial output:
 #
+# * Give your pipeline template a unique ID. Typically it's best to namespace the
+#   template ID, e.g. "myteam-mytemplate".
 # * Rename the pipeline stage IDs, notification names and trigger names to be 
 #   more meaningful. Enumerated stage IDs is ultimately a detriment for 
 #   long-term maintainability.
