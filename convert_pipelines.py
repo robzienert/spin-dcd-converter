@@ -30,9 +30,10 @@ def convert(pipeline_config):
     ('schema', '1'),
     ('id', 'generatedTemplate'),
     ('metadata', UnsortableOrderedDict([
-      ('name', pipeline_config['name']),
-      ('description', pipeline_config['description'] if 'description' in pipeline_config else ''),
-      ('owner', pipeline_config['lastModifiedBy'])
+      ('name', pipeline_config['name'] if 'name' in pipeline_config else 'GIVE ME A NAME'),
+      ('description', pipeline_config['description'] if 'description' in pipeline_config else 'GIVE ME A DESCRIPTION'),
+      ('owner', pipeline_config['lastModifiedBy']),
+      ('scopes', [])
     ])),
     ('protect', False),
     ('configuration', UnsortableOrderedDict([
