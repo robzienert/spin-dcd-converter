@@ -19,3 +19,17 @@ $ API_SESSION=lol-im-lazy API_HOST=https://spinnaker \
   clouddriver \
   "Canary"
 ```
+
+### Using Docker
+
+You can use the converter using Docker:
+
+```
+$ docker build -t spin-dcd-converter .
+$ docker run --rm -ti \
+	-e "API_SESSION=lol-im-lazy" \
+	-e "API_HOST=https://spinnaker" \
+	spin-dcd-converter \
+	clouddriver \
+	"Canary"
+```
