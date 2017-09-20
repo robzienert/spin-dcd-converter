@@ -32,7 +32,7 @@ def convert(pipeline_config):
     ('metadata', UnsortableOrderedDict([
       ('name', pipeline_config['name'] if 'name' in pipeline_config else 'GIVE ME A NAME'),
       ('description', pipeline_config['description'] if 'description' in pipeline_config else 'GIVE ME A DESCRIPTION'),
-      ('owner', pipeline_config['lastModifiedBy']),
+      ('owner', pipeline_config['lastModifiedBy'] if 'lastModifiedBy' in pipeline_config else 'GIVE ME AN OWNER'),
       ('scopes', [])
     ])),
     ('protect', False),
