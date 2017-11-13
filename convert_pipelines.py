@@ -144,7 +144,7 @@ def get_pipeline_config(api_host, app, pipeline_config_id):
   ), cookies=cookies)
 
   if r.status_code != 200:
-    print('failed getting pipeline config: ' + r.status_code)
+    print('failed getting pipeline config: ' + str(r.status_code))
     return False
   
   return r.json()
