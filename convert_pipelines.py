@@ -30,16 +30,16 @@ def convert(pipeline_config):
     ('schema', '1'),
     ('id', 'generatedTemplate'),
     ('metadata', UnsortableOrderedDict([
-      ('name', pipeline_config['name'] if 'name' in pipeline_config else 'GIVE ME A NAME'),
-      ('description', pipeline_config['description'] if 'description' in pipeline_config else 'GIVE ME A DESCRIPTION'),
-      ('owner', pipeline_config['lastModifiedBy']),
+      ('name', _attrOr(pipeline_config, 'name', 'GIVE ME A NAME')),
+      ('description', _attrOr(pipeline_config, 'description', 'GIVE ME A DESCRIPTION')),
+      ('owner', _attrOr(pipeline_config, 'lastModifiedBy')),
       ('scopes', [])
     ])),
     ('protect', False),
     ('configuration', UnsortableOrderedDict([
       ('concurrentExecutions', UnsortableOrderedDict([
-        ('parallel', pipeline_config['parallel']),
-        ('limitConcurrent', pipeline_config['limitConcurrent'])
+        ('parallel', _attrOr(pipeline_config, 'parallel')),
+        ('limitConcurrent', _attrOr(pipeline_config, 'limitConcurrent'))
       ])),
       ('triggers', _convert_triggers(pipeline_config['triggers']) if 'triggers' in pipeline_config else []),
       ('parameters', pipeline_config['parameterConfig'] if 'parameterConfig' in pipeline_config else []),
@@ -49,6 +49,15 @@ def convert(pipeline_config):
     ('stages', _convert_stages(pipeline_config['stages']))
   ])
   return template
+
+
+def _attrOr(pipeline_config, key, default=""):
+  if key in pipeline_config:
+    return pipeline_config[key] 
+  else:
+    if DEBUG_MODE:
+      print('> Missing attribute {key}!'.format(key=key))
+    return default
 
 
 def _convert_stages(stages):
