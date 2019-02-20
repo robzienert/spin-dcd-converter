@@ -136,12 +136,17 @@ def get_pipeline_config(api_host, app, pipeline_config_id):
   # TODO rz - I'm not proud of this, but I want to move on
   session_cookie = os.getenv('API_SESSION')
   cookies = {} if session_cookie is None else {'SESSION': session_cookie}
-
-  r = requests.get('{host}/applications/{app}/pipelineConfigs/{config_id}'.format(
+  endpoint = '{host}/applications/{app}/pipelineConfigs/{config_id}'.format(
     host=api_host, 
     app=app,
     config_id=pipeline_config_id
-  ), cookies=cookies)
+  )
+
+  if DEBUG_MODE:
+    print('Endpoint:\n\t' + endpoint)
+    print('Cookie:\n\t' + str(cookies))
+
+  r = requests.get(endpoint, cookies=cookies)
 
   if r.status_code != 200:
     print('failed getting pipeline config: ' + str(r.status_code))
@@ -154,19 +159,24 @@ def parser():
   p = argparse.ArgumentParser()
   p.add_argument('app')
   p.add_argument('pipelineConfigId')
+  p.add_argument('--debug', dest='debug', help='Enable debug mode',
+    default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
   return p
 
+DEBUG_MODE=False
 
 if __name__ == '__main__':
   api_host = os.getenv('API_HOST')
+  args = parser().parse_args()
+  DEBUG_MODE = args.debug
   if api_host is None:
     print('API_HOST must be set to your Spinnaker API')
     sys.exit(1)
   if api_host[-1:] == '/':
     api_host = api_host[:-1]
 
-  args = parser().parse_args()
-
   pipeline_config = get_pipeline_config(api_host, args.app, args.pipelineConfigId)
+  if DEBUG_MODE:
+    print('Response:\n---\n{json}\n---'.format(json=pipeline_config))
   template = convert(pipeline_config)
   print(render(template))

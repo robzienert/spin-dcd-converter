@@ -20,6 +20,8 @@ $ API_SESSION=lol-im-lazy API_HOST=https://spinnaker \
   "Canary"
 ```
 
+> pass `--debug true` to enable debug information
+
 ### Using Docker
 
 You can use the converter using Docker:
