@@ -38,7 +38,7 @@ def convert(pipeline_config):
     ('protect', False),
     ('configuration', UnsortableOrderedDict([
       ('concurrentExecutions', UnsortableOrderedDict([
-        ('parallel', _attrOr(pipeline_config, 'parallel')),
+        ('parallel', _attrOr(pipeline_config, 'parallel', False)),
         ('limitConcurrent', _attrOr(pipeline_config, 'limitConcurrent'))
       ])),
       ('triggers', _convert_triggers(pipeline_config['triggers']) if 'triggers' in pipeline_config else []),
