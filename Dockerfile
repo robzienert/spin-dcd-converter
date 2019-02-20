@@ -1,9 +1,10 @@
-FROM python:3
+FROM python:3-alpine
 
-COPY ./ /workspace/
+WORKDIR /workspace
 
-WORKDIR /workspace/
-
+COPY requirements.txt .
 RUN pip install -r requirements.txt
+
+COPY *.py .
 
 ENTRYPOINT ["python", "convert_pipelines.py"]
