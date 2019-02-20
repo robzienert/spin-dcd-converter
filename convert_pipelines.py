@@ -132,9 +132,9 @@ def render(pipeline_template):
 {template}
 '''.format(template=yaml.safe_dump(pipeline_template, default_flow_style=False))
 
-def get_pipeline_config(api_host, app, pipeline_config_id):
+def get_pipeline_config(api_host, app, pipeline_config_id, apiSession):
   # TODO rz - I'm not proud of this, but I want to move on
-  session_cookie = os.getenv('API_SESSION')
+  session_cookie = apiSession if apiSession else os.getenv('API_SESSION')
   cookies = {} if session_cookie is None else {'SESSION': session_cookie}
   endpoint = '{host}/applications/{app}/pipelineConfigs/{config_id}'.format(
     host=api_host, 
@@ -161,21 +161,23 @@ def parser():
   p.add_argument('pipelineConfigId')
   p.add_argument('--debug', dest='debug', help='Enable debug mode',
     default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+  p.add_argument('--host', dest='apiHost', help='Spinnaker gate api host')
+  p.add_argument('--session', dest='apiSession', help='Spinnaker cookie session')
   return p
 
 DEBUG_MODE=False
 
 if __name__ == '__main__':
-  api_host = os.getenv('API_HOST')
   args = parser().parse_args()
   DEBUG_MODE = args.debug
+  api_host = args.apiHost if args.apiHost else os.getenv('API_HOST')
   if api_host is None:
-    print('API_HOST must be set to your Spinnaker API')
+    print('--host API_HOST must be set to your Spinnaker API!')
     sys.exit(1)
   if api_host[-1:] == '/':
     api_host = api_host[:-1]
 
-  pipeline_config = get_pipeline_config(api_host, args.app, args.pipelineConfigId)
+  pipeline_config = get_pipeline_config(api_host, args.app, args.pipelineConfigId, args.apiSession)
   if DEBUG_MODE:
     print('Response:\n---\n{json}\n---'.format(json=pipeline_config))
   template = convert(pipeline_config)
