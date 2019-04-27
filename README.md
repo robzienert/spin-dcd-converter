@@ -1,5 +1,7 @@
 # spin-dcd-converter
 
+**USE `spincli` INSTEAD**
+
 Tool to help convert Spinnaker JSON pipelines to DCD pipelines
 
 ```
