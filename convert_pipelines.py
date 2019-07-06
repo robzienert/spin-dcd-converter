@@ -30,16 +30,16 @@ def convert(pipeline_config):
     ('schema', '1'),
     ('id', 'generatedTemplate'),
     ('metadata', UnsortableOrderedDict([
-      ('name', pipeline_config['name'] if 'name' in pipeline_config else 'GIVE ME A NAME'),
-      ('description', pipeline_config['description'] if 'description' in pipeline_config else 'GIVE ME A DESCRIPTION'),
-      ('owner', pipeline_config['lastModifiedBy']),
+      ('name', _attrOr(pipeline_config, 'name', 'GIVE ME A NAME')),
+      ('description', _attrOr(pipeline_config, 'description', 'GIVE ME A DESCRIPTION')),
+      ('owner', _attrOr(pipeline_config, 'lastModifiedBy')),
       ('scopes', [])
     ])),
     ('protect', False),
     ('configuration', UnsortableOrderedDict([
       ('concurrentExecutions', UnsortableOrderedDict([
-        ('parallel', pipeline_config['parallel']),
-        ('limitConcurrent', pipeline_config['limitConcurrent'])
+        ('parallel', _attrOr(pipeline_config, 'parallel', False)),
+        ('limitConcurrent', _attrOr(pipeline_config, 'limitConcurrent'))
       ])),
       ('triggers', _convert_triggers(pipeline_config['triggers']) if 'triggers' in pipeline_config else []),
       ('parameters', pipeline_config['parameterConfig'] if 'parameterConfig' in pipeline_config else []),
@@ -49,6 +49,15 @@ def convert(pipeline_config):
     ('stages', _convert_stages(pipeline_config['stages']))
   ])
   return template
+
+
+def _attrOr(pipeline_config, key, default=""):
+  if key in pipeline_config:
+    return pipeline_config[key] 
+  else:
+    if DEBUG_MODE:
+      print('> Missing attribute {key}!'.format(key=key))
+    return default
 
 
 def _convert_stages(stages):
@@ -132,19 +141,24 @@ def render(pipeline_template):
 {template}
 '''.format(template=yaml.safe_dump(pipeline_template, default_flow_style=False))
 
-def get_pipeline_config(api_host, app, pipeline_config_id):
+def get_pipeline_config(api_host, app, pipeline_config_id, apiSession):
   # TODO rz - I'm not proud of this, but I want to move on
-  session_cookie = os.getenv('API_SESSION')
+  session_cookie = apiSession if apiSession else os.getenv('API_SESSION')
   cookies = {} if session_cookie is None else {'SESSION': session_cookie}
-
-  r = requests.get('{host}/applications/{app}/pipelineConfigs/{config_id}'.format(
+  endpoint = '{host}/applications/{app}/pipelineConfigs/{config_id}'.format(
     host=api_host, 
     app=app,
     config_id=pipeline_config_id
-  ), cookies=cookies)
+  )
+
+  if DEBUG_MODE:
+    print('Endpoint:\n\t' + endpoint)
+    print('Cookie:\n\t' + str(cookies))
+
+  r = requests.get(endpoint, cookies=cookies)
 
   if r.status_code != 200:
-    print('failed getting pipeline config: ' + r.status_code)
+    print('failed getting pipeline config: ' + str(r.status_code))
     return False
   
   return r.json()
@@ -154,19 +168,26 @@ def parser():
   p = argparse.ArgumentParser()
   p.add_argument('app')
   p.add_argument('pipelineConfigId')
+  p.add_argument('--debug', dest='debug', help='Enable debug mode',
+    default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+  p.add_argument('--host', dest='apiHost', help='Spinnaker gate api host')
+  p.add_argument('--session', dest='apiSession', help='Spinnaker cookie session')
   return p
 
+DEBUG_MODE=False
 
 if __name__ == '__main__':
-  api_host = os.getenv('API_HOST')
+  args = parser().parse_args()
+  DEBUG_MODE = args.debug
+  api_host = args.apiHost if args.apiHost else os.getenv('API_HOST')
   if api_host is None:
-    print('API_HOST must be set to your Spinnaker API')
+    print('--host API_HOST must be set to your Spinnaker API!')
     sys.exit(1)
   if api_host[-1:] == '/':
     api_host = api_host[:-1]
 
-  args = parser().parse_args()
-
-  pipeline_config = get_pipeline_config(api_host, args.app, args.pipelineConfigId)
+  pipeline_config = get_pipeline_config(api_host, args.app, args.pipelineConfigId, args.apiSession)
+  if DEBUG_MODE:
+    print('Response:\n---\n{json}\n---'.format(json=pipeline_config))
   template = convert(pipeline_config)
   print(render(template))
